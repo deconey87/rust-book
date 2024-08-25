@@ -74,6 +74,7 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
 }
 
 // Tは Display を実装する型を受け取る（トレイト境界）
+// xとyが同じライフタイムを持つ参照であり、返り値のライフタイムも一致する → 関数が返す参照は、 xかyのライフタイムが有効な間だけ有効
 fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a str
 where
     T: Display,
