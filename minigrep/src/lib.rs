@@ -10,15 +10,19 @@ pub struct Config {
 }
 
 impl Config {
-    // &[T] はスライス、ここでは String型のスライス
-    // Vec<String>の参照は &[String] に自動変換される
     // 'static は静的ライフタイム。この参照がプログラムの全期間生存できる事を意味し、文字列リテラルは全て'staticライフタイムになる
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-        let query = args[1].clone();
-        let filename = args[2].clone();
+    pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
+        // 1つ目はプログラム名なので不要
+        args.next();
+
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Did not get a query string"),
+        };
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Did not get a file names"),
+        };
 
         // 環境変数 "CASE_INSENSITIVE" が設定されているかどうかだけ見る（値は考慮しない）
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
@@ -51,13 +55,18 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-    results
+    // let mut results = Vec::new();
+    // for line in contents.lines() {
+    //     if line.contains(query) {
+    //         results.push(line);
+    //     }
+    // }
+    // results
+
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
