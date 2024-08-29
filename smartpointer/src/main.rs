@@ -14,8 +14,16 @@
 // }
 
 use std::rc::Rc;
+// enum List {
+//     Cons(i32, Rc<List>),
+//     Nil,
+// }
+
+use std::cell::RefCell;
+// RcにRefcellを抱えさせることで、複数の所有者を持ちそして、可変化できる値を作る
+#[derive(Debug)]
 enum List {
-    Cons(i32, Rc<List>),
+    Cons(Rc<RefCell<i32>>, Rc<List>),
     Nil,
 }
 
@@ -87,16 +95,28 @@ fn main() {
     // let c = Cons(4, Box::new(a));
 
     // Rc<T>を使うと、単独の値に複数の所有者を持つことができる
-    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
-    println!("count after creating a = {}", Rc::strong_count(&a));
-    // aへの参照カウントが1増える
-    let b = Cons(3, Rc::clone(&a));
-    println!("count after creating b = {}", Rc::strong_count(&a));
-    {
-        let c = Cons(4, Rc::clone(&a));
-        println!("count after creating c = {}", Rc::strong_count(&a));
-    }
-    println!("count after c goes out of scope = {}", Rc::strong_count(&a));
+    // let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    // println!("count after creating a = {}", Rc::strong_count(&a));
+    // // aへの参照カウントが1増える
+    // let b = Cons(3, Rc::clone(&a));
+    // println!("count after creating b = {}", Rc::strong_count(&a));
+    // {
+    //     let c = Cons(4, Rc::clone(&a));
+    //     println!("count after creating c = {}", Rc::strong_count(&a));
+    // }
+    // println!("count after c goes out of scope = {}", Rc::strong_count(&a));
+
+    let value = Rc::new(RefCell::new(5));
+    let a = Rc::new(Cons(Rc::clone(&value), Rc::new(Nil)));
+    let b = Cons(Rc::new(RefCell::new(6)), Rc::clone(&a));
+    let c = Cons(Rc::new(RefCell::new(10)), Rc::clone(&a));
+
+    // プリミティブな数値（i32）を直接操作したいので *（デリファレンス）を書く必要がある
+    *(value.borrow_mut()) += 10;
+
+    println!("a after = {:?}", a);
+    println!("b after = {:?}", b);
+    println!("c after = {:?}", c);
 }
 
 // Boxの独自実装
