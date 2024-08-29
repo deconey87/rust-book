@@ -8,8 +8,14 @@
 
 // Box<T>はポインタなので、データのサイズに左右されずに Box<T> に必要な領域が決まる
 // だからコンパイルできる
+// enum List {
+//     Cons(i32, Box<List>),
+//     Nil,
+// }
+
+use std::rc::Rc;
 enum List {
-    Cons(i32, Box<List>),
+    Cons(i32, Rc<List>),
     Nil,
 }
 
@@ -25,7 +31,7 @@ fn main() {
     // Boxは、データがスタックにあるのと同じような方法でアクセスできる
     println!("b = {}", b);
 
-    let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
+    // let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
 
     // 参照外しの基本
     let x = 5;
@@ -71,6 +77,26 @@ fn main() {
     // 早期にDropする必要がある場合、std::mem::dropを呼び出すとdropできる
     drop(c);
     println!("CustomSmartPointer dropped before the end of main.");
+
+    // Rc<T> 参照カウント
+
+    // このコードはコンパイルできない
+    // bリストを作成するときに、aがムーブされるので
+    // let a = Cons(5, Box::new(Cons(10, Box::new(Nil))));
+    // let b = Cons(3, Box::new(a));
+    // let c = Cons(4, Box::new(a));
+
+    // Rc<T>を使うと、単独の値に複数の所有者を持つことができる
+    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    println!("count after creating a = {}", Rc::strong_count(&a));
+    // aへの参照カウントが1増える
+    let b = Cons(3, Rc::clone(&a));
+    println!("count after creating b = {}", Rc::strong_count(&a));
+    {
+        let c = Cons(4, Rc::clone(&a));
+        println!("count after creating c = {}", Rc::strong_count(&a));
+    }
+    println!("count after c goes out of scope = {}", Rc::strong_count(&a));
 }
 
 // Boxの独自実装
