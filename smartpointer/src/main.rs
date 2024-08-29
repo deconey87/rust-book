@@ -58,6 +58,19 @@ fn main() {
     // &m は &MyBox<String>だが、 MyBoxがDerefを実装しているので、 deref() が呼び出されて &String になる
     // そして、StringもDerefが実装されているので &str になって、関数が求める型と一致する
     hello(&m);
+
+    let c = CustomSmartPointer {
+        data: String::from("my stuff"),
+    };
+    let d = CustomSmartPointer {
+        data: String::from("other stuff"),
+    };
+
+    println!("CustomSmartPointer created.");
+    // Dropトレイトのdropは、スコープを抜けたら自動で呼ばれ、明示的に呼び出すことはできないが、
+    // 早期にDropする必要がある場合、std::mem::dropを呼び出すとdropできる
+    drop(c);
+    println!("CustomSmartPointer dropped before the end of main.");
 }
 
 // Boxの独自実装
@@ -81,4 +94,19 @@ impl<T> Deref for MyBox<T> {
 
 fn hello(name: &str) {
     println!("hello, {}", name);
+}
+
+// スマートポインタはDropを実装する
+// これにより、値がスコープを抜けるときに処理を実行できる
+// 例えば、Box<T>はヒープの領域を解放している
+
+struct CustomSmartPointer {
+    data: String,
+}
+
+impl Drop for CustomSmartPointer {
+    fn drop(&mut self) {
+        // ここで必要なクリーンアップとかを行う
+        println!("Dropping CustomSmartPointer with data: {}", self.data);
+    }
 }
